@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Smart Insole AI Dashboard</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>Smart Insole AI</h1>
+
+        <p>
+            Real-Time Injury Prevention System
+        </p>
+
+    </div>
+
+    <!-- CARDS -->
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>FSR Pressure</h3>
+
+            <h1 id="fsr-value">0</h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Pressure State</h3>
+
+            <h1 id="pressure-state">Normal</h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Steps</h3>
+
+            <h1 id="step-count">0</h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>AI Prediction</h3>
+
+            <h1 id="ml-prediction">idle</h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Fall Confidence</h3>
+
+            <h1 id="fall-confidence">
+                0%
+            </h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Stability Score</h3>
+
+            <h1 id="stability-score">
+                100
+            </h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Movement Intensity</h3>
+
+            <h1 id="movement-intensity">
+                0
+            </h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>LSTM AI</h3>
+
+            <h1 id="lstm-ai">
+                Normal
+            </h1>
+
+        </div>
+
+    </div>
+
+    <!-- 3D SHOE -->
+
+    <div class="shoe-container">
+
+        <h2>3D Motion Visualization</h2>
+
+        <div id="shoe3d"></div>
+
+    </div>
+
+    <!-- STATUS SECTION -->
+
+    <div class="status-section">
+
+        <div class="status-card">
+
+            <h2>Walking Status</h2>
+
+            <p id="walking-status">
+                Idle
+            </p>
+
+        </div>
+
+        <div class="status-card">
+
+            <h2>Gait Status</h2>
+
+            <p id="gait-status">
+                Normal
+            </p>
+
+        </div>
+
+        <div class="status-card danger">
+
+            <h2>Injury Risk</h2>
+
+            <h2 id="fall-alert">
+                No Fall Detected
+            </h2>
+
+            <p id="injury-alert">
+                SAFE
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- GRAPHS -->
+
+    <div class="graphs-wrapper">
+
+        <div class="graph-container">
+
+            <h2>FSR Pressure</h2>
+
+            <canvas id="fsrChart"></canvas>
+
+        </div>
+
+        <div class="graph-container">
+
+            <h2>Motion Intensity</h2>
+
+            <canvas id="motionChart"></canvas>
+
+        </div>
+
+    </div>
+
+    <!-- AI PANEL -->
+
+    <div class="ai-panel">
+
+        <h2>Neural Motion Intelligence</h2>
+
+        <h1 id="ai-status">
+            NORMAL
+        </h1>
+
+        <div class="ai-badge"
+             id="ai-badge">
+
+            SYSTEM STABLE
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+// =========================
+// FSR CHART
+// =========================
+
+const ctx =
+document.getElementById('fsrChart').getContext('2d');
+
+const fsrChart = new Chart(ctx, {
+
+    type: 'line',
+
+    data: {
+
+        labels: [],
+
+        datasets: [{
+
+            label: 'FSR Pressure',
+
+            data: [],
+
+            borderWidth: 3,
+
+            tension: 0.3
+        }]
+    },
+
+    options: {
+
+        responsive: true,
+
+        animation: false,
+
+        scales: {
+
+            y: {
+
+                beginAtZero: true,
+
+                max: 4095
+            }
+        }
+    }
+});
+
+// =========================
+// MOTION CHART
+// =========================
+
+const motionCtx =
+document.getElementById('motionChart').getContext('2d');
+
+const motionChart = new Chart(motionCtx, {
+
+    type: 'line',
+
+    data: {
+
+        labels: [],
+
+        datasets: [{
+
+            label: 'Movement Intensity',
+
+            data: [],
+
+            borderWidth: 3,
+
+            tension: 0.3
+        }]
+    },
+
+    options: {
+
+        responsive: true,
+
+        animation: false
+    }
+});
+
+// =========================
+// THREE JS SCENE
+// =========================
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+    75,
+    document.getElementById('shoe3d').clientWidth / 400,
+    0.1,
+    1000
+);
+
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true
+});
+
+renderer.setSize(
+    document.getElementById('shoe3d').clientWidth,
+    400
+);
+
+document
+.getElementById('shoe3d')
+.appendChild(renderer.domElement);
+
+// LIGHTS
+
+const light = new THREE.PointLight(
+    0xffffff,
+    1
+);
+
+light.position.set(10,10,10);
+
+scene.add(light);
+
+const ambient =
+new THREE.AmbientLight(0xffffff,0.5);
+
+scene.add(ambient);
+
+const glowLight =
+new THREE.PointLight(
+    0x3b82f6,
+    2,
+    20
+);
+
+glowLight.position.set(0,2,4);
+
+scene.add(glowLight);
+
+// SHOE MODEL
+
+const geometry =
+new THREE.CapsuleGeometry(
+    1.2,
+    3,
+    8,
+    16
+);
+
+const material =
+new THREE.MeshStandardMaterial({
+
+    color:0x3b82f6,
+
+    metalness:0.5,
+
+    roughness:0.2
+});
+
+const shoe =
+new THREE.Mesh(
+    geometry,
+    material
+);
+
+scene.add(shoe);
+
+camera.position.z = 8;
+
+// ANIMATION LOOP
+
+function animate(){
+
+    requestAnimationFrame(animate);
+
+    camera.position.y =
+    Math.sin(Date.now()*0.001)
+    * 0.2;
+
+    renderer.render(scene,camera);
+
+}
+
+animate();
+
+// =========================
+// SHOE ROTATION
+// =========================
+
+function updateShoeRotation(data){
+
+    // =========================
+    // BASE FLOATING
+    // =========================
+
+    const time = Date.now() * 0.002;
+
+    shoe.position.y =
+        Math.sin(time) * 0.15;
+
+    // =========================
+    // STEP BOUNCE
+    // =========================
+
+    const bounce =
+        data.fsr * 0.00008;
+
+    shoe.scale.y =
+        1 - Math.min(bounce,0.15);
+
+    // =========================
+    // MOTION ENERGY
+    // =========================
+
+    const energy =
+        data.movement_intensity
+        * 0.00002;
+
+    shoe.rotation.x =
+        Math.sin(time * 2)
+        * energy;
+
+    shoe.rotation.z =
+        Math.cos(time * 2)
+        * energy;
+
+    // =========================
+    // INSTABILITY WOBBLE
+    // =========================
+
+    if(
+        data.lstm_prediction ===
+        "Instability"
+    ){
+
+        shoe.rotation.y +=
+            Math.sin(time * 12)
+            * 0.05;
+
+        shoe.material.color.set(
+            0xff9900
+        );
+    }
+
+    // =========================
+    // FALL SHAKE
+    // =========================
+
+    else if(data.fall){
+
+        shoe.position.x =
+            Math.sin(time * 40)
+            * 0.2;
+
+        shoe.rotation.z =
+            Math.sin(time * 35)
+            * 0.4;
+
+        shoe.material.color.set(
+            0xff0000
+        );
+    }
+
+    // =========================
+    // NORMAL
+    // =========================
+
+    else{
+
+        shoe.position.x = 0;
+
+        shoe.material.color.set(
+            0x3b82f6
+        );
+    }
+}
+// =========================
+// FETCH DATA
+// =========================
+
+async function fetchData() {
+
+    const response =
+    await fetch('/get_data');
+
+    const data =
+    await response.json();
+
+    // =========================
+    // AI PANEL
+    // =========================
+
+    const aiStatus =
+    document.getElementById('ai-status');
+
+    const aiBadge =
+    document.getElementById('ai-badge');
+
+    if (
+        data.lstm_prediction === "Instability"
+    ) {
+
+        aiStatus.innerText =
+            "INSTABILITY";
+
+        aiBadge.innerText =
+            "RISK DETECTED";
+
+        aiBadge.style.background =
+            "rgba(239,68,68,0.2)";
+
+        aiBadge.style.color =
+            "#f87171";
+    }
+
+    else {
+
+        aiStatus.innerText =
+            "NORMAL";
+
+        aiBadge.innerText =
+            "SYSTEM STABLE";
+
+        aiBadge.style.background =
+            "rgba(34,197,94,0.2)";
+
+        aiBadge.style.color =
+            "#4ade80";
+    }
+
+    // =========================
+    // FALL ALERT
+    // =========================
+
+    if (data.fall) {
+
+        document.getElementById(
+            'fall-alert'
+        ).innerText =
+            "FALL DETECTED!";
+
+    }
+
+    else {
+
+        document.getElementById(
+            'fall-alert'
+        ).innerText =
+            "No Fall Detected";
+    }
+
+    // =========================
+    // UPDATE VALUES
+    // =========================
+
+    document.getElementById(
+        'fsr-value'
+    ).innerText = data.fsr;
+
+    document.getElementById(
+        'pressure-state'
+    ).innerText = data.state;
+
+    document.getElementById(
+        'step-count'
+    ).innerText = data.steps;
+
+    document.getElementById(
+        'walking-status'
+    ).innerText = data.walking;
+
+    document.getElementById(
+        'ml-prediction'
+    ).innerText = data.prediction;
+
+    document.getElementById(
+        'gait-status'
+    ).innerText = data.gait;
+
+    document.getElementById(
+        'fall-confidence'
+    ).innerText =
+    data.fall_confidence + "%";
+
+    document.getElementById(
+        'stability-score'
+    ).innerText =
+    data.stability_score;
+
+    document.getElementById(
+        'movement-intensity'
+    ).innerText =
+    Math.floor(data.movement_intensity);
+
+    document.getElementById(
+        'lstm-ai'
+    ).innerText =
+    data.lstm_prediction;
+
+    // =========================
+    // DANGER STATUS
+    // =========================
+
+    if (data.injury_risk) {
+
+        document.getElementById(
+            'injury-alert'
+        ).innerText = "DANGER";
+
+    }
+
+    else {
+
+        document.getElementById(
+            'injury-alert'
+        ).innerText = "SAFE";
+    }
+
+    // =========================
+    // FSR GRAPH
+    // =========================
+
+    fsrChart.data.labels.push('');
+
+    fsrChart.data.datasets[0]
+    .data.push(data.fsr);
+
+    if (
+        fsrChart.data.labels.length > 25
+    ) {
+
+        fsrChart.data.labels.shift();
+
+        fsrChart.data.datasets[0]
+        .data.shift();
+    }
+
+    fsrChart.update();
+
+    // =========================
+    // MOTION GRAPH
+    // =========================
+
+    motionChart.data.labels.push('');
+
+    motionChart.data.datasets[0]
+    .data.push(data.movement_intensity);
+
+    if (
+        motionChart.data.labels.length > 25
+    ) {
+
+        motionChart.data.labels.shift();
+
+        motionChart.data.datasets[0]
+        .data.shift();
+    }
+
+    motionChart.update();
+
+    // =========================
+    // BACKGROUND ALERT
+    // =========================
+
+    if (data.fall_confidence > 70) {
+
+        document.body.style.background =
+            "#3b0000";
+
+    }
+
+    else {
+
+        document.body.style.background =
+            "#0f172a";
+    }
+
+    // =========================
+    // UPDATE SHOE
+    // =========================
+
+    updateShoeRotation(data);
+}
+
+// =========================
+// START
+// =========================
+
+setInterval(fetchData, 200);
+
+</script>
+
+</body>
+</html>

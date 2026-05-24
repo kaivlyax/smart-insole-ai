@@ -1,0 +1,11 @@
+.env
+
+venv/
+
+tfenv/
+
+__pycache__/
+
+*.pyc
+
+sensor_logs.csv

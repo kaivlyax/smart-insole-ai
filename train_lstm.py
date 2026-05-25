@@ -192,6 +192,6 @@ print("LSTM Accuracy:", accuracy)
 # SAVE MODEL
 # =========================
 
-model.save("lstm_gait_model.keras")
+model.save("lstm_gait_model.h5")
 
 print("LSTM model saved!")

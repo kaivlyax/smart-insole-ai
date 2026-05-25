@@ -127,7 +127,7 @@ sensor_buffer = []
 
 model = joblib.load('model.pkl')
 
-load_model("lstm_gait_model.h5", compile=False)
+# load_model("lstm_gait_model.h5", compile=False)
 
 # =========================
 # GLOBAL VARIABLES
@@ -445,14 +445,9 @@ def sensor():
                 axis=0
             )
 
-            prediction = lstm_model.predict(
-                X_input,
-                verbose=0
-            )
+            prediction = "idle"
 
-            predicted_class = np.argmax(
-                prediction
-            )
+            predicted_class = 0
 
             if predicted_class == 0:
 

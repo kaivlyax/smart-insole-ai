@@ -44,6 +44,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # =========================
 # FLASK
@@ -75,10 +76,9 @@ email_sent = False
 # DATABASE
 # =========================
 
-conn = psycopg2.connect(
-    os.getenv("DATABASE_URL")
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+conn = psycopg2.connect(DATABASE_URL)
 cursor = conn.cursor()
 
 cursor.execute("""
@@ -115,6 +115,42 @@ CREATE TABLE IF NOT EXISTS sensor_logs (
 
 conn.commit()
 
+cursor.execute("""
+
+CREATE TABLE IF NOT EXISTS users (
+
+    id SERIAL PRIMARY KEY,
+
+    username TEXT UNIQUE,
+
+    email TEXT UNIQUE,
+
+    password TEXT
+
+)
+
+""")
+
+cursor.execute("""
+
+CREATE TABLE IF NOT EXISTS login_logs (
+
+    id SERIAL PRIMARY KEY,
+
+    username TEXT,
+
+    ip_address TEXT,
+
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+)
+
+""")
+
+conn.commit()
+
+cursor.close()
+conn.close()
 # =========================
 # BUFFER
 # =========================
@@ -192,6 +228,9 @@ def database_worker():
 
                 sensor_buffer.clear()
 
+                conn = psycopg2.connect(DATABASE_URL)
+                cursor = conn.cursor()
+
                 for item in local_copy:
 
                     cursor.execute("""
@@ -237,6 +276,8 @@ VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 ))
 
                 conn.commit()
+                cursor.close()
+                conn.close()
 
                 print(
                     "Inserted",
@@ -294,6 +335,7 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def home():
+
 
     return render_template('index.html')
 
@@ -466,7 +508,6 @@ def sensor():
             )
 
         except Exception as e:
-            conn.rollback()
             print("LSTM ERROR:", e)
 
     # =========================
@@ -739,48 +780,44 @@ def get_data():
     })
 
 @app.route('/register', methods=['GET','POST'])
-
 def register():
 
     if request.method == 'POST':
 
         username = request.form['username']
-
         email = request.form['email']
 
         password = generate_password_hash(
-
             request.form['password']
         )
 
         try:
 
+            conn = psycopg2.connect(DATABASE_URL)
+            cursor = conn.cursor()
+
             cursor.execute(
-
                 """
-
 INSERT INTO users (
-
     username,
     email,
     password
-
 )
-
 VALUES (%s,%s,%s)
-
                 """,
-
-                (username,email,password)
+                (username, email, password)
             )
 
             conn.commit()
+
+            cursor.close()
+            conn.close()
 
             return redirect('/login')
 
         except Exception as e:
 
-            conn.rollback()
+            print("REGISTER ERROR:", e)
 
             return str(e)
 
@@ -795,6 +832,9 @@ def login():
         username = request.form['username']
 
         password = request.form['password']
+
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
 
         cursor.execute(
 
@@ -841,8 +881,15 @@ VALUES (%s,%s)
 
             conn.commit()
 
-            return redirect('/')
+            cursor.close()
+            conn.close()
+           
 
+            return redirect('/')
+        
+            
+        cursor.close()
+        conn.close()
     return render_template('login.html')
 
 @app.route('/logout')
@@ -857,7 +904,7 @@ def logout():
 # =========================
 # START SERVER
 # =========================
-
+threading.Thread(target=database_worker, daemon=True).start()
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

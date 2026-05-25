@@ -273,17 +273,20 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
 
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+
     cursor.execute(
-
         "SELECT * FROM users WHERE id=%s",
-
         (user_id,)
     )
 
     user = cursor.fetchone()
 
-    if user:
+    cursor.close()
+    conn.close()
 
+    if user:
         return User(user[0], user[1])
 
     return None

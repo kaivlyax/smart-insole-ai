@@ -127,9 +127,7 @@ sensor_buffer = []
 
 model = joblib.load('model.pkl')
 
-lstm_model = load_model(
-    'lstm_gait_model.keras'
-)
+load_model("lstm_gait_model.h5", compile=False)
 
 # =========================
 # GLOBAL VARIABLES

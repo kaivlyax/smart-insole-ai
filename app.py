@@ -740,7 +740,6 @@ Immediate attention may be required.
 # =========================
 
 @app.route('/get_data')
-@login_required
 def get_data():
 
     return jsonify({

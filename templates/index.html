@@ -488,61 +488,54 @@ async function fetchData() {
 
     try {
 
-        const response =
-        await fetch('/get_data');
+        const response = await fetch('/get_data');
 
-        const data =
-        await response.json();
+        const data = await response.json();
 
         console.log(data);
 
-        // =========================
-        // UPDATE VALUES
-        // =========================
+        // SAFE DEFAULTS
 
-        document.getElementById(
-            'fsr-value'
-        ).innerText = data.fsr;
+        const fsr = data.fsr || 0;
+        const state = data.state || "Normal";
+        const steps = data.steps || 0;
+        const walking = data.walking || "Idle";
+        const prediction = data.prediction || "idle";
+        const gait = data.gait || "Normal";
+        const fallConfidence = data.fall_confidence || 0;
+        const stability = data.stability_score || 0;
+        const movement = data.movement_intensity || 0;
+        const lstm = data.lstm_prediction || "Normal";
+        const injury = data.injury_risk || false;
 
-        document.getElementById(
-            'pressure-state'
-        ).innerText = data.state;
+        // UPDATE UI
 
-        document.getElementById(
-            'step-count'
-        ).innerText = data.steps;
+        document.getElementById('fsr-value').innerText = fsr;
 
-        document.getElementById(
-            'walking-status'
-        ).innerText = data.walking;
+        document.getElementById('pressure-state').innerText = state;
 
-        document.getElementById(
-            'ml-prediction'
-        ).innerText = data.prediction;
+        document.getElementById('step-count').innerText = steps;
 
-        document.getElementById(
-            'gait-status'
-        ).innerText = data.gait;
+        document.getElementById('walking-status').innerText = walking;
 
-        document.getElementById(
-            'fall-confidence'
-        ).innerText =
-        data.fall_confidence + "%";
+        document.getElementById('ml-prediction').innerText = prediction;
 
-        document.getElementById(
-            'stability-score'
-        ).innerText =
-        data.stability_score;
+        document.getElementById('gait-status').innerText = gait;
 
-        document.getElementById(
-            'movement-intensity'
-        ).innerText =
-        Math.floor(data.movement_intensity);
+        document.getElementById('fall-confidence').innerText =
+            fallConfidence + "%";
 
-        document.getElementById(
-            'lstm-ai'
-        ).innerText =
-        data.lstm_prediction;
+        document.getElementById('stability-score').innerText =
+            stability;
+
+        document.getElementById('movement-intensity').innerText =
+            Math.floor(movement);
+
+        document.getElementById('lstm-ai').innerText =
+            lstm;
+
+        document.getElementById('injury-alert').innerText =
+            injury ? "DANGER" : "SAFE";
 
         updateShoeRotation(data);
 
@@ -550,10 +543,7 @@ async function fetchData() {
 
     catch(error) {
 
-        console.log(
-            "FETCH ERROR:",
-            error
-        );
+        console.log("FETCH ERROR:", error);
     }
 }
 // =========================
@@ -561,6 +551,7 @@ async function fetchData() {
 // =========================
 
 setInterval(fetchData, 1000);
+fetchData();
 
 </script>
 

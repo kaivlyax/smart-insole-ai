@@ -343,7 +343,7 @@ def home():
 # SENSOR API
 # =========================
 
-@app.route('/sensor', methods=['POST'])
+@app.route('/sensor/', methods=['POST'])
 def sensor():
 
     global latest_fsr_value

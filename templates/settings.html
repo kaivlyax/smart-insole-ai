@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Insole AI — Settings</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash {{ category }}" onclick="this.style.animation='flashOut 0.3s forwards';setTimeout(()=>this.remove(),300)">
+      <span class="flash-icon">{% if category == 'error' %}⚠{% elif category == 'success' %}✓{% else %}ℹ{% endif %}</span>
+      <span class="flash-text">{{ message }}</span>
+      <button class="flash-close">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">👟</div>
+      <div class="sidebar-brand-text">
+        <h2>Smart Insole</h2>
+        <p>AI Dashboard</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="/" class="nav-link"><span class="nav-icon">⚡</span> Live Dashboard</a>
+      <a href="/history" class="nav-link"><span class="nav-icon">📊</span> History</a>
+      <div class="nav-section-label">Account</div>
+      <a href="/profile" class="nav-link"><span class="nav-icon">👤</span> Profile</a>
+      <a href="/settings" class="nav-link active"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/profile" class="sidebar-user">
+        <div class="sidebar-avatar">{{ user.username[0].upper() }}</div>
+        <div class="sidebar-user-info">
+          <div class="uname">{{ user.username }}</div>
+          <div class="urole">Member</div>
+        </div>
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Settings</h1>
+        <p>Manage your account preferences</p>
+      </div>
+      <div class="topbar-right">
+        <a href="/logout" class="logout-btn">⎋ Logout</a>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+
+      <!-- Settings nav -->
+      <nav class="settings-nav">
+        <a class="settings-nav-item active" onclick="showSection('security')" href="#security"><span class="s-icon">🔒</span> Security</a>
+        <a class="settings-nav-item" onclick="showSection('notifications')" href="#notifications"><span class="s-icon">🔔</span> Notifications</a>
+        <a class="settings-nav-item" onclick="showSection('danger')" href="#danger"><span class="s-icon">⚠️</span> Danger Zone</a>
+      </nav>
+
+      <!-- Sections -->
+      <div>
+
+        <!-- Security -->
+        <div class="settings-section active" id="section-security">
+          <div class="panel">
+            <div class="panel-title">🔒 Change Password</div>
+            <form method="POST" action="/settings">
+              <input type="hidden" name="action" value="change_password">
+              <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input class="form-input" type="password" name="current_password" placeholder="Enter current password" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">New Password</label>
+                  <input class="form-input" type="password" name="new_password" id="newPw" placeholder="Min 6 characters" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Confirm New Password</label>
+                  <input class="form-input" type="password" name="confirm_password" id="confirmPw" placeholder="Repeat new password" required>
+                </div>
+              </div>
+              <button type="submit" class="btn-save">Update Password</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">🛡 Active Sessions</div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.15rem">Current Session</div>
+                <div style="font-size:0.72rem;color:var(--text-muted)">Active right now · This device</div>
+              </div>
+              <span class="badge safe">● Active</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="settings-section" id="section-notifications">
+          <div class="panel">
+            <div class="panel-title">🔔 Alert Preferences</div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="tl">Fall Detection Alerts</div>
+                <div class="td">Receive email when a fall is detected</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="tl">Injury Risk Warnings</div>
+                <div class="td">Notify when injury risk is elevated</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="tl">Daily Summary</div>
+                <div class="td">Daily activity summary via email</div>
+              </div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="tl">Login Notifications</div>
+                <div class="td">Alert on new login from unknown device</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div style="margin-top:1.25rem">
+              <button class="btn-save">Save Preferences</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-section" id="section-danger">
+          <div class="danger-zone">
+            <div class="panel-title">⚠️ Danger Zone</div>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1.25rem">These actions are irreversible. Please proceed with caution.</p>
+            <form method="POST" action="/settings" onsubmit="return confirmDelete()">
+              <input type="hidden" name="action" value="delete_account">
+              <div class="form-group">
+                <label class="form-label" style="color:var(--accent-red)">Type your username to confirm deletion</label>
+                <input class="form-input" type="text" name="confirm_delete" placeholder="{{ user.username }}" style="border-color:rgba(255,59,92,0.2)">
+              </div>
+              <button type="submit" class="btn-danger-outline">Delete My Account</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+document.querySelectorAll('.flash').forEach(f => {
+  setTimeout(() => { f.style.animation = 'flashOut 0.3s forwards'; setTimeout(() => f.remove(), 300); }, 5000);
+});
+
+function showSection(name) {
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  event.preventDefault();
+}
+
+function confirmDelete() {
+  return confirm('This will permanently delete your account and all data. Are you absolutely sure?');
+}
+
+// Password match check
+document.getElementById('confirmPw')?.addEventListener('input', function() {
+  const match = this.value === document.getElementById('newPw').value;
+  this.style.borderColor = this.value ? (match ? 'rgba(0,255,163,0.3)' : 'rgba(255,59,92,0.5)') : '';
+});
+</script>
+</body>
+</html>

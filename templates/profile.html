@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Insole AI — Profile</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash {{ category }}" onclick="this.style.animation='flashOut 0.3s forwards';setTimeout(()=>this.remove(),300)">
+      <span class="flash-icon">{% if category == 'error' %}⚠{% elif category == 'success' %}✓{% else %}ℹ{% endif %}</span>
+      <span class="flash-text">{{ message }}</span>
+      <button class="flash-close">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">👟</div>
+      <div class="sidebar-brand-text">
+        <h2>Smart Insole</h2>
+        <p>AI Dashboard</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="/" class="nav-link"><span class="nav-icon">⚡</span> Live Dashboard</a>
+      <a href="/history" class="nav-link"><span class="nav-icon">📊</span> History</a>
+      <div class="nav-section-label">Account</div>
+      <a href="/profile" class="nav-link active"><span class="nav-icon">👤</span> Profile</a>
+      <a href="/settings" class="nav-link"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/profile" class="sidebar-user">
+        <div class="sidebar-avatar">
+          {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="avatar">
+          {% else %}{{ user.username[0].upper() }}{% endif %}
+        </div>
+        <div class="sidebar-user-info">
+          <div class="uname">{{ user.username }}</div>
+          <div class="urole">Member</div>
+        </div>
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Profile</h1>
+        <p>Manage your account information</p>
+      </div>
+      <div class="topbar-right">
+        <a href="/logout" class="logout-btn">⎋ Logout</a>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+
+      <!-- LEFT: Avatar card -->
+      <div>
+        <div class="profile-card">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar">
+              {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="avatar">
+              {% else %}{{ user.username[0].upper() }}{% endif %}
+            </div>
+            <span class="profile-online-dot"></span>
+          </div>
+          <div class="profile-name">{{ user.full_name or user.username }}</div>
+          <div class="profile-username">@{{ user.username }}</div>
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <div class="val">{{ session_count }}</div>
+              <div class="lbl">Sessions</div>
+            </div>
+            <div class="profile-stat">
+              <div class="val">–</div>
+              <div class="lbl">Days Active</div>
+            </div>
+          </div>
+          {% if user.created_at %}
+          <div class="profile-joined">Joined {{ user.created_at.strftime('%b %Y') if user.created_at else '—' }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Recent logins -->
+        <div class="panel" style="margin-top:1.25rem">
+          <div class="panel-title">Recent Logins</div>
+          <div class="login-history-list">
+            {% for entry in login_history %}
+            <div class="login-history-item">
+              <span class="ip">{{ entry[0] }}</span>
+              <span class="time">{{ entry[1].strftime('%d %b, %H:%M') }}</span>
+            </div>
+            {% else %}
+            <p style="font-size:0.75rem;color:var(--text-muted)">No login history yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Edit form -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">Personal Information</div>
+          <form method="POST" action="/profile">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input class="form-input" type="text" name="full_name" placeholder="Your full name" value="{{ user.full_name or '' }}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input class="form-input" type="text" value="{{ user.username }}" disabled>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input class="form-input" type="email" name="email" placeholder="you@example.com" value="{{ user.email or '' }}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input class="form-input" type="tel" name="phone" placeholder="+91 XXXXX XXXXX" value="{{ user.phone or '' }}">
+              </div>
+            </div>
+            <button type="submit" class="btn-save">Save Changes</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Account Details</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.9rem 1rem">
+              <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">User ID</div>
+              <div style="font-family:var(--font-mono);font-size:0.8rem;color:var(--accent-cyan)">#{{ user.id }}</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.9rem 1rem">
+              <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">Auth Method</div>
+              <div style="font-size:0.8rem;color:var(--text-primary)">{% if user.avatar_url %}Google OAuth{% else %}Password{% endif %}</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.9rem 1rem">
+              <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">Email</div>
+              <div style="font-size:0.8rem;color:var(--text-primary);word-break:break-all">{{ user.email or '—' }}</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.9rem 1rem">
+              <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">Phone</div>
+              <div style="font-size:0.8rem;color:var(--text-primary)">{{ user.phone or '—' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+document.querySelectorAll('.flash').forEach(f => {
+  setTimeout(() => { f.style.animation = 'flashOut 0.3s forwards'; setTimeout(() => f.remove(), 300); }, 4000);
+});
+</script>
+</body>
+</html>

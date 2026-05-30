@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Insole AI — History</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">👟</div>
+      <div class="sidebar-brand-text">
+        <h2>Smart Insole</h2>
+        <p>AI Dashboard</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="/" class="nav-link"><span class="nav-icon">⚡</span> Live Dashboard</a>
+      <a href="/history" class="nav-link active"><span class="nav-icon">📊</span> History</a>
+      <div class="nav-section-label">Account</div>
+      <a href="/profile" class="nav-link"><span class="nav-icon">👤</span> Profile</a>
+      <a href="/settings" class="nav-link"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/profile" class="sidebar-user">
+        <div class="sidebar-avatar">{{ user.username[0].upper() }}</div>
+        <div class="sidebar-user-info">
+          <div class="uname">{{ user.username }}</div>
+          <div class="urole">Member</div>
+        </div>
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Sensor History</h1>
+        <p>Last 100 sensor readings from your insole</p>
+      </div>
+      <div class="topbar-right">
+        <a href="/logout" class="logout-btn">⎋ Logout</a>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-card info">
+        <div class="sc-label">Total Records</div>
+        <div class="sc-value">{{ total }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Avg FSR Pressure</div>
+        <div class="sc-value">{{ "%.0f"|format(stats[0] or 0) }}</div>
+      </div>
+      <div class="stat-card success">
+        <div class="sc-label">Avg Stability</div>
+        <div class="sc-value">{{ "%.0f"|format(stats[2] or 0) }}</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="sc-label">Injury Risk Events</div>
+        <div class="sc-value">{{ risk_count }}</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-panel">
+      <div class="table-header">
+        <h2>Sensor Log</h2>
+        <span style="font-size:0.72rem;color:var(--text-muted)">Showing last 100 entries</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>FSR Pressure</th>
+              <th>AI Prediction</th>
+              <th>Fall Confidence</th>
+              <th>Stability</th>
+              <th>Movement</th>
+              <th>Injury Risk</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td style="color:var(--text-muted)">{{ log[0] }}</td>
+              <td style="color:var(--accent-cyan);font-family:var(--font-mono)">{{ log[1] }}</td>
+              <td>{{ log[2] or '—' }}</td>
+              <td>
+                <span style="color:{% if log[4] and log[4] > 70 %}var(--accent-red){% elif log[4] and log[4] > 40 %}var(--accent-orange){% else %}var(--accent-green){% endif %}">
+                  {{ log[4] or 0 }}%
+                </span>
+              </td>
+              <td>
+                <span style="color:{% if log[5] and log[5] < 50 %}var(--accent-red){% elif log[5] and log[5] < 80 %}var(--accent-orange){% else %}var(--accent-green){% endif %}">
+                  {{ log[5] or 0 }}
+                </span>
+              </td>
+              <td style="font-family:var(--font-mono)">{{ log[6] or 0 }}</td>
+              <td>
+                {% if log[3] %}
+                  <span class="badge risk">⚠ RISK</span>
+                {% else %}
+                  <span class="badge safe">✓ SAFE</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--text-muted);font-size:0.72rem">{{ log[7].strftime('%d %b %H:%M:%S') if log[7] else '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem">No sensor data recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
